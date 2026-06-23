@@ -1,7 +1,7 @@
 import MapComponent from "@/components/MapComponent";
 
 export default function Home() {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY || "";
 
   return (
     <main className="flex flex-col min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
