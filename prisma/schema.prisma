@@ -32,3 +32,10 @@ model Route {
   orderedPath   Json
   createdAt     DateTime @default(now())
 }
+
+model ApiLog {
+  id        String   @id @default(uuid())
+  apiName   String
+  endpoint  String
+  createdAt DateTime @default(now())
+}

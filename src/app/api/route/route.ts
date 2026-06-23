@@ -77,6 +77,13 @@ export async function POST(req: Request) {
       }
     });
 
+    const logApi = prisma.apiLog.create({
+      data: {
+        apiName: "Routes API",
+        endpoint: "https://routes.googleapis.com/directions/v2:computeRoutes",
+      }
+    });
+
     const locationsMetadata = body.locationsMetadata;
     if (locationsMetadata && Array.isArray(locationsMetadata)) {
       const saveLocations = prisma.location.createMany({
@@ -87,9 +94,9 @@ export async function POST(req: Request) {
           label: loc.label,
         }))
       });
-      await prisma.$transaction([saveLocations, saveRoute]);
+      await prisma.$transaction([saveLocations, saveRoute, logApi]);
     } else {
-      await saveRoute;
+      await prisma.$transaction([saveRoute, logApi]);
     }
   }
 

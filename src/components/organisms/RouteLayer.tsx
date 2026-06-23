@@ -9,6 +9,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
+import { ROUTE_COLORS } from "@/components/ions";
 import type { Location, RouteResult } from "@/components/types";
 
 interface Props {
@@ -20,6 +21,7 @@ export default function RouteLayer({ locations, onResult }: Props) {
   const map = useMap();
   const geometryLib = useMapsLibrary("geometry");
   const polylineRef = useRef<google.maps.Polyline | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
 
   useEffect(() => {
     if (!map || locations.length < 2 || !geometryLib) return;
@@ -53,6 +55,8 @@ export default function RouteLayer({ locations, onResult }: Props) {
 
       // Draw polyline
       polylineRef.current?.setMap(null);
+      markersRef.current.forEach(m => m.setMap(null));
+      markersRef.current = [];
       const path = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
       polylineRef.current = new google.maps.Polyline({
         path, map,
@@ -63,6 +67,36 @@ export default function RouteLayer({ locations, onResult }: Props) {
       path.forEach((p) => bounds.extend(p));
       map.fitBounds(bounds);
 
+      // Ordered stops
+      const orderedLocs =
+        intermediates.length > 0 && route.optimizedIntermediateWaypointIndex?.length > 0
+          ? [origin, ...route.optimizedIntermediateWaypointIndex.map((i: number) => intermediates[i]), destination]
+          : locations;
+
+      // Drop markers
+      orderedLocs.forEach((loc, idx) => {
+        const marker = new google.maps.Marker({
+          map,
+          position: { lat: loc.lat, lng: loc.lng },
+          title: loc.name,
+          label: {
+            text: String(idx + 1),
+            color: "#fff",
+            fontWeight: "bold",
+            fontSize: "12px",
+          },
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 16,
+            fillColor: ROUTE_COLORS[idx % ROUTE_COLORS.length],
+            fillOpacity: 1,
+            strokeColor: "#fff",
+            strokeWeight: 3,
+          },
+        });
+        markersRef.current.push(marker);
+      });
+
       onResult({
         encodedPolyline: route.polyline?.encodedPolyline ?? "",
         distanceMeters: route.distanceMeters,
@@ -72,7 +106,11 @@ export default function RouteLayer({ locations, onResult }: Props) {
     };
 
     fetchRoute();
-    return () => polylineRef.current?.setMap(null);
+    return () => {
+      polylineRef.current?.setMap(null);
+      markersRef.current.forEach(m => m.setMap(null));
+      markersRef.current = [];
+    };
   }, [map, locations, geometryLib]);
 
   return null;

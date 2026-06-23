@@ -12,7 +12,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { APIProvider, Map } from "@vis.gl/react-google-maps";
 
 import { SLOT_COUNT } from "@/components/ions";
@@ -27,11 +27,11 @@ const TEST_LINKS = [
   "https://www.google.com/maps/place/Maninagar,+Ahmedabad,+Gujarat,+India/@22.9927574,72.5940799,4151m/data=!3m2!1e3!4b1!4m6!3m5!1s0x395e85c2e335ed6b:0xd19a77c6688f5c9b!8m2!3d22.995165!4d72.604097!16zL20vMDRfMXo1?entry=tts&g_ep=EgoyMDI2MDYxNi4wIPu8ASoASAFQAw%3D%3D&skid=a59f8a32-46f9-449c-8db9-979ea316d4d2",
   "https://www.google.com/maps/place/Ghodasar,+Ahmedabad,+Gujarat,+India/@22.9746608,72.6128512,2076m/data=!3m2!1e3!4b1!4m6!3m5!1s0x395e8f5590ffcd7d:0x4b0554bef6153a98!8m2!3d22.9755494!4d72.6154686!16s%2Fg%2F1ywqfdw4h?entry=tts&g_ep=EgoyMDI2MDYxNi4wIPu8ASoASAFQAw%3D%3D&skid=2a432f3a-8eb3-4af6-866f-dfc0bd264a70",
   "https://www.google.com/maps/place/Deepmala+Bunglows/@22.9792425,72.6148159,1038m/data=!3m2!1e3!4b1!4m6!3m5!1s0x395e8600f101fa05:0x6f30e0c451108516!8m2!3d22.9792376!4d72.6173908!16s%2Fg%2F11bw1h3f12?entry=tts&g_ep=EgoyMDI2MDYxNi4wIPu8ASoASAFQAw%3D%3D&skid=7a41796c-5700-4835-a429-baebcb516627",
-  "https://www.google.com/maps/place/Ahuja+Career+Institute/@22.996676,72.601282,1038m/data=!3m2!1e3!4b1!4m6!3m5!1s0x395e850db752415b:0x3b5f502462ebb8b7!8m2!3d22.9966711!4d72.6038569!16s%2Fg%2F11hdng_slz?entry=tts&g_ep=EgoyMDI2MDYxNi4wIPu8ASoASAFQAw%3D%3D&skid=738cdf3a-d767-4c95-9365-9e5c22510de7",
   "https://www.google.com/maps/place/ALLEN+Career+Institute+-+Maninagar+Campus+%7C+IIT+JEE,+NEET+%26+Foundation+Coaching/@22.9948243,72.6067605,1038m/data=!3m2!1e3!4b1!4m6!3m5!1s0x395e85e0d5b6f865:0xd03cd47c2a90a5aa!8m2!3d22.9948194!4d72.6093354!16s%2Fg%2F11b7gt21b8?entry=tts&g_ep=EgoyMDI2MDYxNi4wIPu8ASoASAFQAw%3D%3D&skid=274ee0ad-e739-475f-9ee9-066f9f9770d2",
-  "https://www.google.com/maps/place/Uttam+Nagar+Garden/@22.9948243,72.6067605,1038m/data=!3m1!1e3!4m6!3m5!1s0x395e85e685cd2e0b:0xe1ec3b70f2f3d8a4!8m2!3d22.9922221!4d72.6066817!16s%2Fg%2F1tczyxvm?entry=tts&g_ep=EgoyMDI2MDYxNi4wIPu8ASoASAFQAw%3D%3D&skid=99aa1b3a-8d30-4ebb-8fa2-bb114dcaff91",
-  "https://www.google.com/maps/place/L+G+HOSPITAL/@22.9948243,72.6067605,1038m/data=!3m1!1e3!4m6!3m5!1s0x395e858896d0a3f3:0xf9d96166a308cc2c!8m2!3d22.9984336!4d72.6042512!16s%2Fg%2F11l66311vz?entry=tts&g_ep=EgoyMDI2MDYxNi4wIPu8ASoASAFQAw%3D%3D&skid=47251e0b-9433-40f1-a204-4b4cd6300ee8",
-  "https://www.google.com/maps/place/Physics+Wallah+Vidyapeeth+Coaching+Center+Maninagar+%7C+Foundation+Classes/@22.9933608,72.6046244,2615m/data=!3m1!1e3!4m6!3m5!1s0x395e85a50a6845b3:0x1dcbced0f8693ee7!8m2!3d22.994415!4d72.607594!16s%2Fg%2F11xlgdpq67?entry=tts&g_ep=EgoyMDI2MDYxNi4wIPu8ASoASAFQAw%3D%3D&skid=999d56ac-bd75-4432-8767-4b4999bd309b",
+  "https://www.google.com/maps/place/Kankaria,+Ahmedabad,+Gujarat/@23.0094625,72.5984359,15z/data=!3m1!4b1!4m6!3m5!1s0x395e85cf57bca76f:0x26cb680e1975c147!8m2!3d23.006741!4d72.5962428!16s%2Fg%2F1tp2ysqt?entry=ttu&g_ep=EgoyMDI2MDYxNi4wIKXMDSoASAFQAw%3D%3D",
+  "https://www.google.com/maps/place/Rajkamal+Bakery/@22.9950838,72.5991234,1038m/data=!3m2!1e3!5s0x395e85dd46286051:0xa68e15780eaea5e4!4m14!1m7!3m6!1s0x395e85e685cd2e0b:0xe1ec3b70f2f3d8a4!2sUttam+Nagar+Garden!8m2!3d22.9922221!4d72.6066817!16s%2Fg%2F1tczyxvm!3m5!1s0x395e85e1ceb9674d:0x38eece3f755165b7!8m2!3d22.9950844!4d72.6016973!16s%2Fg%2F1tcyvtw9?entry=ttu&g_ep=EgoyMDI2MDYxNi4wIKXMDSoASAFQAw%3D%3D",
+  "https://www.google.com/maps/place/KumKum+School/@22.9917922,72.6093857,1038m/data=!3m1!1e3!4m14!1m7!3m6!1s0x395e858896d0a3f3:0xf9d96166a308cc2c!2sL+G+HOSPITAL!8m2!3d22.9984336!4d72.6042512!16s%2Fg%2F11l66311vz!3m5!1s0x395e85e47f85e53f:0xd33c94de08e85b3b!8m2!3d22.9888008!4d72.6096434!16s%2Fg%2F11b5pjbbms?entry=ttu&g_ep=EgoyMDI2MDYxNi4wIKXMDSoASAFQAw%3D%3D",
+  "https://www.google.com/maps/place/Geeta+Mandir+ST+Bus+Stand/@23.0286373,72.6026691,14.33z/data=!4m14!1m7!3m6!1s0x395e85d61634ad81:0xc09d186f2a5aa097!2sJhulta+Minar,+Bibiji+Masjid!8m2!3d23.0143484!4d72.6142055!16s%2Fg%2F11c4wxb9rq!3m5!1s0x395e8575c1e784c3:0x8a8903b1b34ee5f5!8m2!3d23.0134581!4d72.5929654!16s%2Fg%2F11j3twwk36?entry=ttu&g_ep=EgoyMDI2MDYxNi4wIKXMDSoASAFQAw%3D%3D",
   "https://www.google.com/maps/place/Bank+of+Baroda/@22.9941995,72.6158958,163m/data=!3m1!1e3!4m6!3m5!1s0x395e85e75a38a2b3:0x6b946be7cc8f218d!8m2!3d22.9944798!4d72.6166988!16s%2Fg%2F1q5bncxym?entry=tts&g_ep=EgoyMDI2MDYxNi4wIPu8ASoASAFQAw%3D%3D&skid=33ee665a-1dea-46b0-a5fd-b627531d257f"
 ];
 
@@ -43,6 +43,18 @@ export default function MapComponent({ apiKey }: { apiKey: string }) {
   const [errors, setErrors] = useState<(string | null)[]>(Array(SLOT_COUNT).fill(null));
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
   const [computing, setComputing] = useState(false);
+
+  useEffect(() => {
+    // Log Dynamic Maps API load
+    fetch("/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        apiName: "Dynamic Maps API",
+        endpoint: "https://maps.googleapis.com/maps/api/js",
+      }),
+    }).catch(console.error);
+  }, []);
 
   /* ── Handlers ──────────────────────────────────────────────────────────── */
 
